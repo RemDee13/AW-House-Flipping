@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="14" fill="#0B0C0E"/>
+  <!-- roofline "A" / house mark -->
+  <path d="M32 14 L52 36 H44 L44 50 H20 V36 H12 Z" fill="none" stroke="#F5A623" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M27 50 V40 H37 V50" fill="none" stroke="#3FB68B" stroke-width="3" stroke-linejoin="round"/>
+</svg>
