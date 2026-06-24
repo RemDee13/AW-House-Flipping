@@ -87,7 +87,7 @@ export default function Hero() {
   }, [])
 
   return (
-    <section className="relative w-full overflow-hidden bg-black" style={{ height: '100dvh' }}>
+    <section className="sticky top-0 z-0 w-full overflow-hidden bg-black" style={{ height: '100dvh' }}>
       {/* BOTTOM — OLD house, rainy video */}
       <video
         className="absolute inset-0 w-full h-full object-cover z-10"
