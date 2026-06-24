@@ -41,7 +41,7 @@ export default function Contact() {
       {/* construction background video (drop public/reno-bg.mp4; section stays black until then) */}
       {bgVideo && (
         <video
-          className="absolute inset-0 w-full h-full object-cover opacity-25"
+          className="absolute inset-0 w-full h-full object-cover opacity-40"
           src={`${BASE}reno-bg.mp4`}
           autoPlay
           muted
@@ -51,7 +51,9 @@ export default function Contact() {
           onError={(e) => { (e.currentTarget as HTMLVideoElement).style.display = 'none' }}
         />
       )}
-      <div className="absolute inset-0 bg-black/75" />
+      {/* darken under the text/form so everything stays readable over the video */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/75 to-black/60" />
+      <div className="absolute inset-0 bg-black/30" />
 
       <div className="relative z-10 mx-auto max-w-6xl px-6 py-28 md:py-36 grid md:grid-cols-2 gap-14">
         <div className="reveal-up">
