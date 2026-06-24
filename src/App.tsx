@@ -4,7 +4,6 @@ import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import Stats from './components/Stats'
 import Story from './components/Story'
-import Transformation from './components/Transformation'
 import Process from './components/Process'
 import Quote from './components/Quote'
 import Contact from './components/Contact'
@@ -51,7 +50,6 @@ export default function App() {
       <div className="relative z-20 bg-black">
         <Stats />
         <Story />
-        <Transformation />
         <Process />
         <Quote />
         <Contact />

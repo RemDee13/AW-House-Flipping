@@ -27,7 +27,6 @@ export default function Footer() {
           <ul className="flex gap-7 text-sm text-white/55">
             <li><a href="#work" className="hover:text-white transition-colors">Work</a></li>
             <li><a href="#process" className="hover:text-white transition-colors">Process</a></li>
-            <li><a href="#services" className="hover:text-white transition-colors">Services</a></li>
             <li><a href="#about" className="hover:text-white transition-colors">About</a></li>
             <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>
           </ul>

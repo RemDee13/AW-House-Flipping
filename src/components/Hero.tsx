@@ -3,18 +3,16 @@ import { HOTSPOTS } from '../data/hotspots'
 import InfoPanel from './InfoPanel'
 
 const BASE = import.meta.env.BASE_URL
-const SPOTLIGHT_R = 300 // px radius of the reveal hole
 const IMG_W = 2752
 const IMG_H = 1536 // natural size of new.jpg / old.mp4 frame (16:9)
+const MOBILE = 768 // <768px: show the whole house (object-contain) so every hotspot is reachable
 
-/** Map an image fraction (0..1) to a viewport pixel position under object-cover. */
-function coverPos(fx: number, fy: number, w: number, h: number) {
-  const scale = Math.max(w / IMG_W, h / IMG_H)
+/** Map an image fraction (0..1) to a viewport pixel position for the active object-fit. */
+function fitPos(fx: number, fy: number, w: number, h: number, fit: 'cover' | 'contain') {
+  const scale = fit === 'cover' ? Math.max(w / IMG_W, h / IMG_H) : Math.min(w / IMG_W, h / IMG_H)
   const dispW = IMG_W * scale
   const dispH = IMG_H * scale
-  const offX = (w - dispW) / 2
-  const offY = (h - dispH) / 2
-  return { x: offX + fx * dispW, y: offY + fy * dispH }
+  return { x: (w - dispW) / 2 + fx * dispW, y: (h - dispH) / 2 + fy * dispH }
 }
 
 export default function Hero() {
@@ -58,7 +56,8 @@ export default function Hero() {
     const apply = (x: number, y: number) => {
       const el = maskRef.current
       if (!el) return
-      const g = `radial-gradient(circle ${SPOTLIGHT_R}px at ${x}px ${y}px, transparent 0, transparent 40%, rgba(0,0,0,0.55) 62%, #000 82%)`
+      const R = window.innerWidth < MOBILE ? 150 : 300
+      const g = `radial-gradient(circle ${R}px at ${x}px ${y}px, transparent 0, transparent 40%, rgba(0,0,0,0.55) 62%, #000 82%)`
       el.style.webkitMaskImage = g
       el.style.maskImage = g
     }
@@ -90,7 +89,7 @@ export default function Hero() {
     <section className="sticky top-0 z-0 w-full overflow-hidden bg-black" style={{ height: '100dvh' }}>
       {/* BOTTOM — OLD house, rainy video */}
       <video
-        className="absolute inset-0 w-full h-full object-cover z-10"
+        className="absolute inset-0 w-full h-full object-contain md:object-cover z-10"
         src={`${BASE}old.mp4`}
         poster={`${BASE}old-poster.jpg`}
         autoPlay
@@ -103,7 +102,7 @@ export default function Hero() {
       {/* TOP — NEW house, masked with the spotlight hole */}
       <img
         ref={maskRef}
-        className="absolute inset-0 w-full h-full object-cover z-20 select-none"
+        className="absolute inset-0 w-full h-full object-contain md:object-cover z-20 select-none"
         src={`${BASE}new.jpg`}
         alt="The renovated house"
         draggable={false}
@@ -126,7 +125,7 @@ export default function Hero() {
       {/* HOTSPOTS — small pulsing amber dots over the house (above text so they stay clickable) */}
       <div className="absolute inset-0 z-50 pointer-events-none">
         {HOTSPOTS.map((h) => {
-          const p = coverPos(h.x, h.y, vp.w, vp.h)
+          const p = fitPos(h.x, h.y, vp.w, vp.h, vp.w < MOBILE ? 'contain' : 'cover')
           const isOn = active === h.id
           return (
             <button

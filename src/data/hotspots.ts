@@ -54,7 +54,7 @@ export const HOTSPOTS: Hotspot[] = [
     before: 'Broken hinges, dragging on the ground, with no working latch.',
     work: ['Rebuilt gate frame', 'Heavy-duty hinges', 'Self-closing latch', 'Matching hardware'],
     cost: 650 },
-  { id: 'driveway', label: 'Driveway', x: 0.86, y: 0.80, icon: Route,
+  { id: 'driveway', label: 'Driveway', x: 0.84, y: 0.74, icon: Route,
     before: 'Cracked, heaving asphalt with weeds in every seam and water pooling at the garage.',
     work: ['Demo of old asphalt', 'New poured concrete drive', 'Proper grading & drainage', 'Sealed finish'],
     cost: 8900 },
@@ -63,5 +63,3 @@ export const HOTSPOTS: Hotspot[] = [
     work: ['Insulated steel carriage door', 'Belt-drive smart opener', 'New springs & tracks', 'Weather seal'],
     cost: 3100 },
 ]
-
-export const TOTAL_INVESTED = HOTSPOTS.reduce((s, h) => s + h.cost, 0)

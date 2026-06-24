@@ -1,10 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Mail, Phone, MapPin } from 'lucide-react'
 
 const ENDPOINT = 'https://formspree.io/f/REPLACE_ME' // swap for a real Formspree id to enable live submit
+const BASE = import.meta.env.BASE_URL
 
 export default function Contact() {
   const [status, setStatus] = useState('')
+  // construction background video — off under reduced-motion
+  const [bgVideo, setBgVideo] = useState(true)
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setBgVideo(false)
+  }, [])
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -31,8 +37,23 @@ export default function Contact() {
   const field = 'w-full bg-white/[0.04] border border-white/12 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-brand transition-colors'
 
   return (
-    <section id="contact" className="bg-black">
-      <div className="mx-auto max-w-6xl px-6 py-28 md:py-36 grid md:grid-cols-2 gap-14">
+    <section id="contact" className="relative overflow-hidden bg-black">
+      {/* construction background video (drop public/reno-bg.mp4; section stays black until then) */}
+      {bgVideo && (
+        <video
+          className="absolute inset-0 w-full h-full object-cover opacity-25"
+          src={`${BASE}reno-bg.mp4`}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          onError={(e) => { (e.currentTarget as HTMLVideoElement).style.display = 'none' }}
+        />
+      )}
+      <div className="absolute inset-0 bg-black/75" />
+
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-28 md:py-36 grid md:grid-cols-2 gap-14">
         <div className="reveal-up">
           <p className="text-xs tracking-[0.28em] uppercase text-brand mb-6">Get an estimate</p>
           <h2 className="font-playfair text-4xl md:text-6xl leading-[1.04]">
