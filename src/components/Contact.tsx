@@ -34,14 +34,14 @@ export default function Contact() {
       .catch(() => setStatus('Network error — please email us directly.'))
   }
 
-  const field = 'w-full bg-white/[0.04] border border-white/12 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-brand transition-colors'
+  const field = 'w-full bg-black/40 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-brand transition-colors'
 
   return (
     <section id="contact" className="relative overflow-hidden bg-black">
       {/* construction background video (drop public/reno-bg.mp4; section stays black until then) */}
       {bgVideo && (
         <video
-          className="absolute inset-0 w-full h-full object-cover opacity-40"
+          className="absolute inset-0 w-full h-full object-cover opacity-65"
           src={`${BASE}reno-bg.mp4`}
           autoPlay
           muted
@@ -51,9 +51,8 @@ export default function Contact() {
           onError={(e) => { (e.currentTarget as HTMLVideoElement).style.display = 'none' }}
         />
       )}
-      {/* darken under the text/form so everything stays readable over the video */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/75 to-black/60" />
-      <div className="absolute inset-0 bg-black/30" />
+      {/* lighter darkening — keep the video visible, just enough contrast for the text/form */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/30" />
 
       <div className="relative z-10 mx-auto max-w-6xl px-6 py-28 md:py-36 grid md:grid-cols-2 gap-14">
         <div className="reveal-up">
@@ -67,26 +66,26 @@ export default function Contact() {
           </p>
           <div className="mt-8 space-y-3 text-white/80">
             <div className="flex items-center gap-3"><Mail size={18} className="text-brand" /> hello@ashwoodrevival.example</div>
-            <div className="flex items-center gap-3"><Phone size={18} className="text-brand" /> (555) 014-2278</div>
+            <div className="flex items-center gap-3"><Phone size={18} className="text-brand" /> (206) 555-0188</div>
             <div className="flex items-center gap-3"><MapPin size={18} className="text-brand" /> Pacific Northwest, USA</div>
           </div>
         </div>
 
         <form onSubmit={onSubmit} className="reveal-up space-y-4" action={ENDPOINT} method="POST">
           <div>
-            <label htmlFor="cf-name" className="block text-xs uppercase tracking-[0.12em] text-white/45 mb-2">Name</label>
+            <label htmlFor="cf-name" className="block text-xs uppercase tracking-[0.12em] text-white/65 mb-2">Name</label>
             <input id="cf-name" name="name" type="text" autoComplete="name" required className={field} />
           </div>
           <div>
-            <label htmlFor="cf-email" className="block text-xs uppercase tracking-[0.12em] text-white/45 mb-2">Email</label>
+            <label htmlFor="cf-email" className="block text-xs uppercase tracking-[0.12em] text-white/65 mb-2">Email</label>
             <input id="cf-email" name="email" type="email" autoComplete="email" required className={field} />
           </div>
           <div>
-            <label htmlFor="cf-prop" className="block text-xs uppercase tracking-[0.12em] text-white/45 mb-2">Property address</label>
+            <label htmlFor="cf-prop" className="block text-xs uppercase tracking-[0.12em] text-white/65 mb-2">Property address</label>
             <input id="cf-prop" name="property" type="text" className={field} />
           </div>
           <div>
-            <label htmlFor="cf-msg" className="block text-xs uppercase tracking-[0.12em] text-white/45 mb-2">What needs work?</label>
+            <label htmlFor="cf-msg" className="block text-xs uppercase tracking-[0.12em] text-white/65 mb-2">What needs work?</label>
             <textarea id="cf-msg" name="message" required rows={4} className={field + ' resize-y'} />
           </div>
           <button type="submit" className="bg-brand hover:bg-brand-dark text-white font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.02] active:scale-95">

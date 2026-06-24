@@ -38,9 +38,17 @@ export default function App() {
       <div className="fixed top-0 left-0 right-0 z-[110] bg-black/70 backdrop-blur-md border-b border-white/10 text-center text-[11px] sm:text-xs text-white/65 py-1.5 px-4">
         <span className="text-white font-medium">Portfolio demo</span>
         <span className="mx-1.5 text-brand">•</span>
-        fictional company
+        Not a real Company
         <span className="mx-1.5 text-brand">•</span>
-        built by <span className="text-white font-medium">Anton Pavlov</span>
+        built by{' '}
+        <a
+          href="https://pavlov-ai.online"
+          target="_blank"
+          rel="noopener"
+          className="text-white font-medium underline underline-offset-2 decoration-white/30 hover:text-brand hover:decoration-brand transition-colors"
+        >
+          Anton Pavlov
+        </a>
       </div>
 
       <Navbar />
