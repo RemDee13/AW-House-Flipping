@@ -123,8 +123,8 @@ export default function Hero() {
         style={{ boxShadow: 'inset 0 0 200px 50px rgba(0,0,0,0.5)' }}
       />
 
-      {/* HOTSPOTS — small pulsing amber dots over the house */}
-      <div className="absolute inset-0 z-40 pointer-events-none">
+      {/* HOTSPOTS — small pulsing amber dots over the house (above text so they stay clickable) */}
+      <div className="absolute inset-0 z-50 pointer-events-none">
         {HOTSPOTS.map((h) => {
           const p = coverPos(h.x, h.y, vp.w, vp.h)
           const isOn = active === h.id
@@ -171,7 +171,7 @@ export default function Hero() {
 
       {/* bottom-left microcopy */}
       <div
-        className="hero-anim hero-fade hidden sm:block absolute bottom-16 left-8 md:left-14 max-w-[260px] z-[45]"
+        className="hero-anim hero-fade hidden sm:block absolute bottom-16 left-8 md:left-14 max-w-[260px] z-[45] pointer-events-none"
         style={{ animationDelay: '0.7s' }}
       >
         <p className="text-sm text-white/85 leading-relaxed drop-shadow">
@@ -181,7 +181,7 @@ export default function Hero() {
 
       {/* bottom-right microcopy + CTA */}
       <div
-        className="hero-anim hero-fade absolute bottom-12 sm:bottom-20 left-5 right-5 sm:left-auto sm:right-10 md:right-14 max-w-full sm:max-w-[270px] z-[45] flex flex-col items-start gap-4"
+        className="hero-anim hero-fade absolute bottom-12 sm:bottom-20 left-5 right-5 sm:left-auto sm:right-10 md:right-14 max-w-full sm:max-w-[270px] z-[45] flex flex-col items-start gap-4 pointer-events-none"
         style={{ animationDelay: '0.85s' }}
       >
         <p className="text-xs sm:text-sm text-white/85 leading-relaxed drop-shadow">
@@ -189,7 +189,7 @@ export default function Hero() {
         </p>
         <a
           href="#contact"
-          className="bg-brand hover:bg-brand-dark text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-brand/30"
+          className="pointer-events-auto bg-brand hover:bg-brand-dark text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-brand/30"
         >
           Start your flip
         </a>
