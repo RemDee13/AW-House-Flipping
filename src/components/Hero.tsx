@@ -36,6 +36,10 @@ export default function Hero() {
   const [active, setActive] = useState<string | null>(null)
   const [hideHint, setHideHint] = useState(false)
   const [showPanel, setShowPanel] = useState(false)
+  // load order: paint the renovated photo FIRST, then mount + fade in the old-house video
+  const [imgLoaded, setImgLoaded] = useState(false)
+  const [videoOn, setVideoOn] = useState(false)
+  const [videoReady, setVideoReady] = useState(false)
 
   // touch devices use the mobile hero in BOTH orientations (don't flip on rotate)
   const isMobile = coarse || vp.w < MOBILE
@@ -81,9 +85,25 @@ export default function Hero() {
     if (isMobile && scrollRef.current) scrollRef.current.scrollLeft = Math.max(0, (stageW - vp.w) / 2)
   }, [isMobile, stageW, vp.w])
 
-  // DESKTOP — cursor-following spotlight
+  // a cached new.jpg can finish loading before React attaches onLoad → the event never fires.
+  // Re-check the ref on mount / branch swap so imgLoaded still flips.
   useEffect(() => {
-    if (isMobile) return
+    const img = maskRef.current
+    if (img && img.complete && img.naturalWidth > 0) setImgLoaded(true)
+  }, [isMobile])
+
+  // defer the old-house video until the renovated photo has painted (+ small delay) so the
+  // site never opens on the broken house
+  useEffect(() => {
+    if (!imgLoaded) return
+    const t = setTimeout(() => setVideoOn(true), 450)
+    return () => clearTimeout(t)
+  }, [imgLoaded])
+
+  // DESKTOP — cursor-following spotlight (only after the video is mounted, so the page opens
+  // on the clean renovated photo and never cuts a hole into a not-yet-loaded old house)
+  useEffect(() => {
+    if (isMobile || !videoOn) return
     smooth.current = { x: window.innerWidth / 2, y: window.innerHeight * 0.5 }
     mouse.current = { ...smooth.current }
     const onMove = (e: PointerEvent) => { mouse.current = { x: e.clientX, y: e.clientY }; setHideHint(true) }
@@ -103,7 +123,7 @@ export default function Hero() {
     }
     raf.current = requestAnimationFrame(tick)
     return () => { window.removeEventListener('pointermove', onMove); cancelAnimationFrame(raf.current) }
-  }, [isMobile])
+  }, [isMobile, videoOn])
 
   // MOBILE — reveal only under the finger (off by default) + pin to the tapped hotspot
   useEffect(() => {
@@ -178,8 +198,19 @@ export default function Hero() {
           style={{ touchAction: 'pan-x' }}
         >
           <div ref={stageRef} className="relative shrink-0" style={{ width: stageW, height: stageH }}>
-            <video className="absolute inset-0 w-full h-full object-cover" src={`${BASE}old.mp4`} poster={`${BASE}old-poster.jpg`} autoPlay muted loop playsInline preload="auto" />
-            <img ref={maskRef} className="absolute inset-0 w-full h-full object-cover select-none" src={`${BASE}new.jpg`} alt="The renovated house" draggable={false} />
+            {videoOn && (
+              <video
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
+                src={`${BASE}old.mp4`}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                onLoadedData={() => setVideoReady(true)}
+              />
+            )}
+            <img ref={maskRef} className="absolute inset-0 w-full h-full object-cover select-none" src={`${BASE}new.jpg`} alt="The renovated house" draggable={false} decoding="async" onLoad={() => setImgLoaded(true)} />
             <div className="absolute inset-0 z-20">
               {HOTSPOTS.map((h) => dot(h, h.x * stageW, h.y * stageH))}
             </div>
@@ -188,8 +219,19 @@ export default function Hero() {
       ) : (
         /* DESKTOP — full-bleed, cursor spotlight */
         <>
-          <video className="absolute inset-0 w-full h-full object-cover z-10" src={`${BASE}old.mp4`} poster={`${BASE}old-poster.jpg`} autoPlay muted loop playsInline preload="auto" />
-          <img ref={maskRef} className="absolute inset-0 w-full h-full object-cover z-20 select-none" src={`${BASE}new.jpg`} alt="The renovated house" draggable={false} />
+          {videoOn && (
+            <video
+              className={`absolute inset-0 w-full h-full object-cover z-10 transition-opacity duration-700 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
+              src={`${BASE}old.mp4`}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              onLoadedData={() => setVideoReady(true)}
+            />
+          )}
+          <img ref={maskRef} className="absolute inset-0 w-full h-full object-cover z-20 select-none" src={`${BASE}new.jpg`} alt="The renovated house" draggable={false} decoding="async" onLoad={() => setImgLoaded(true)} />
           <div className="absolute inset-0 z-50 pointer-events-none">
             {HOTSPOTS.map((h) => {
               const p = coverPos(h.x, h.y, vp.w, vp.h)
