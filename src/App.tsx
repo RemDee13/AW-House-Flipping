@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Lenis from 'lenis'
+import Preloader from './components/Preloader'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import Stats from './components/Stats'
@@ -10,6 +11,14 @@ import Contact from './components/Contact'
 import Footer from './components/Footer'
 
 export default function App() {
+  const [loaded, setLoaded] = useState(false)
+
+  // lock scrolling while the preloader covers the page
+  useEffect(() => {
+    document.body.style.overflow = loaded ? '' : 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [loaded])
+
   // smooth scrolling (Lenis), disabled under reduced-motion
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -34,6 +43,8 @@ export default function App() {
 
   return (
     <div id="top" className="bg-black tracking-[-0.02em]" style={{ fontFamily: 'Inter' }}>
+      {!loaded && <Preloader onDone={() => setLoaded(true)} />}
+
       {/* portfolio ribbon — makes the demo framing explicit */}
       <div className="fixed top-0 left-0 right-0 z-[110] bg-black/70 backdrop-blur-md border-b border-white/10 text-center text-[11px] sm:text-xs text-white/65 py-1.5 px-4">
         <span className="text-white font-medium">Portfolio demo</span>
