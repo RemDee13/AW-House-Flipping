@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Mail, Phone, MapPin } from 'lucide-react'
 
-const ENDPOINT = 'https://formspree.io/f/REPLACE_ME' // swap for a real Formspree id to enable live submit
+// Web3Forms — paste the access key from web3forms.com to start receiving submissions.
+const ACCESS_KEY = 'YOUR_WEB3FORMS_ACCESS_KEY'
+const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit'
+const FALLBACK_EMAIL = 'hello@ashwoodrevival.example'
 const BASE = import.meta.env.BASE_URL
 
 export default function Contact() {
@@ -16,22 +19,25 @@ export default function Contact() {
     e.preventDefault()
     const form = e.currentTarget
     const data = new FormData(form)
-    if (ENDPOINT.includes('REPLACE_ME')) {
+
+    // until a real key is set, fall back to opening the visitor's email app
+    if (ACCESS_KEY.startsWith('YOUR_')) {
       const body =
         `Name: ${data.get('name') || ''}\nEmail: ${data.get('email') || ''}\n` +
         `Property: ${data.get('property') || ''}\n\n${data.get('message') || ''}`
-      window.location.href =
-        'mailto:hello@ashwoodrevival.example?subject=Estimate%20request&body=' + encodeURIComponent(body)
+      window.location.href = `mailto:${FALLBACK_EMAIL}?subject=Estimate%20request&body=` + encodeURIComponent(body)
       setStatus('Opening your email app…')
       return
     }
+
     setStatus('Sending…')
-    fetch(ENDPOINT, { method: 'POST', body: data, headers: { Accept: 'application/json' } })
-      .then((r) => {
-        if (r.ok) { form.reset(); setStatus('Thanks — we’ll be in touch within one business day.') }
-        else setStatus('Something went wrong. Email hello@ashwoodrevival.example.')
+    fetch(WEB3FORMS_ENDPOINT, { method: 'POST', body: data, headers: { Accept: 'application/json' } })
+      .then((r) => r.json())
+      .then((j) => {
+        if (j.success) { form.reset(); setStatus('Thanks — we’ll be in touch within one business day.') }
+        else setStatus('Something went wrong. Please email us directly.')
       })
-      .catch(() => setStatus('Network error — please email us directly.'))
+      .catch(() => setStatus('Network error — please try again.'))
   }
 
   const field = 'w-full bg-black/40 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-brand transition-colors'
@@ -61,8 +67,8 @@ export default function Contact() {
             Tell us about<br />the house
           </h2>
           <p className="mt-6 text-white/60 text-lg leading-relaxed max-w-md">
-            Send the address and a few photos and we’ll come back with a scope and a number. (Demo form —
-            wire it to your own inbox before going live.)
+            Send the address and a few photos and we’ll come back with a scope and a number — usually within
+            one business day.
           </p>
           <div className="mt-8 space-y-3 text-white/80">
             <div className="flex items-center gap-3"><Mail size={18} className="text-brand" /> hello@ashwoodrevival.example</div>
@@ -71,7 +77,14 @@ export default function Contact() {
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="reveal-up space-y-4" action={ENDPOINT} method="POST">
+        <form onSubmit={onSubmit} className="reveal-up space-y-4" action={WEB3FORMS_ENDPOINT} method="POST">
+          {/* Web3Forms config */}
+          <input type="hidden" name="access_key" value={ACCESS_KEY} />
+          <input type="hidden" name="subject" value="New estimate request — Ashwood Revival" />
+          <input type="hidden" name="from_name" value="Ashwood Revival website" />
+          {/* honeypot */}
+          <input type="checkbox" name="botcheck" className="hidden" tabIndex={-1} autoComplete="off" />
+
           <div>
             <label htmlFor="cf-name" className="block text-xs uppercase tracking-[0.12em] text-white/65 mb-2">Name</label>
             <input id="cf-name" name="name" type="text" autoComplete="name" required className={field} />
