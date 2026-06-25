@@ -32,19 +32,32 @@ export default function Hero() {
   const smooth = useRef({ x: 0, y: 0 })
   const raf = useRef(0)
   const [vp, setVp] = useState({ w: 1280, h: 720 })
+  const [coarse, setCoarse] = useState(false)
   const [active, setActive] = useState<string | null>(null)
   const [hideHint, setHideHint] = useState(false)
 
-  const isMobile = vp.w < MOBILE
-  const stageH = vp.h
-  const stageW = stageH * (IMG_W / IMG_H) // mobile wide stage
+  // touch devices use the mobile hero in BOTH orientations (don't flip on rotate)
+  const isMobile = coarse || vp.w < MOBILE
+  // stage = the photo at object-cover size for the current viewport (portrait → wider than
+  // screen, swipe to pan; landscape → fills width, slight vertical crop). Keeps the image's
+  // aspect so hotspot fractions stay exact.
+  const scale = Math.max(vp.w / IMG_W, vp.h / IMG_H)
+  const stageW = IMG_W * scale
+  const stageH = IMG_H * scale
 
-  // viewport size
+  // viewport size + pointer type — re-checked on resize and orientation change
   useEffect(() => {
-    const onResize = () => setVp({ w: window.innerWidth, h: window.innerHeight })
-    onResize()
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+    const mq = window.matchMedia('(pointer: coarse)')
+    const update = () => { setVp({ w: window.innerWidth, h: window.innerHeight }); setCoarse(mq.matches) }
+    update()
+    window.addEventListener('resize', update)
+    window.addEventListener('orientationchange', update)
+    mq.addEventListener?.('change', update)
+    return () => {
+      window.removeEventListener('resize', update)
+      window.removeEventListener('orientationchange', update)
+      mq.removeEventListener?.('change', update)
+    }
   }, [])
 
   // close panel on Escape
@@ -56,7 +69,7 @@ export default function Hero() {
 
   // center the mobile pan on mount
   useEffect(() => {
-    if (isMobile && scrollRef.current) scrollRef.current.scrollLeft = (stageW - vp.w) / 2
+    if (isMobile && scrollRef.current) scrollRef.current.scrollLeft = Math.max(0, (stageW - vp.w) / 2)
   }, [isMobile, stageW, vp.w])
 
   // DESKTOP — cursor-following spotlight
@@ -152,10 +165,10 @@ export default function Hero() {
         /* MOBILE — full-height photo, swipe left/right to pan; reveal under finger */
         <div
           ref={scrollRef}
-          className="absolute inset-0 z-10 overflow-x-auto overflow-y-hidden scrollbar-hide"
+          className="absolute inset-0 z-10 flex items-center overflow-x-auto overflow-y-hidden scrollbar-hide"
           style={{ touchAction: 'pan-x' }}
         >
-          <div ref={stageRef} className="relative h-full" style={{ width: stageW }}>
+          <div ref={stageRef} className="relative shrink-0" style={{ width: stageW, height: stageH }}>
             <video className="absolute inset-0 w-full h-full object-cover" src={`${BASE}old.mp4`} poster={`${BASE}old-poster.jpg`} autoPlay muted loop playsInline preload="auto" />
             <img ref={maskRef} className="absolute inset-0 w-full h-full object-cover select-none" src={`${BASE}new.jpg`} alt="The renovated house" draggable={false} />
             <div className="absolute inset-0 z-20">
