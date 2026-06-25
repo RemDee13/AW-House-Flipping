@@ -35,7 +35,6 @@ export default function Hero() {
   const [coarse, setCoarse] = useState(false)
   const [active, setActive] = useState<string | null>(null)
   const [hideHint, setHideHint] = useState(false)
-  const [showPanel, setShowPanel] = useState(false)
   // load order: paint the renovated photo FIRST, then mount + fade in the old-house video
   const [imgLoaded, setImgLoaded] = useState(false)
   const [videoOn, setVideoOn] = useState(false)
@@ -71,14 +70,6 @@ export default function Hero() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
-
-  // delay the card ~0.9s so the pinned spotlight (the old house) is visible first
-  useEffect(() => {
-    if (!active) { setShowPanel(false); return }
-    setShowPanel(false)
-    const t = setTimeout(() => setShowPanel(true), 900)
-    return () => clearTimeout(t)
-  }, [active])
 
   // center the mobile pan on mount
   useEffect(() => {
@@ -312,8 +303,9 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* info panel (liquid-glass: right panel on desktop, bottom sheet on mobile) */}
-      {active && showPanel && <InfoPanel hotspot={HOTSPOTS.find((h) => h.id === active)!} onClose={() => setActive(null)} />}
+      {/* info panel (liquid-glass: right panel on desktop, bottom sheet on mobile) —
+          appears instantly on tap, then glides in over ~1.5s (see .panel-in in index.css) */}
+      {active && <InfoPanel hotspot={HOTSPOTS.find((h) => h.id === active)!} onClose={() => setActive(null)} />}
     </section>
   )
 }
