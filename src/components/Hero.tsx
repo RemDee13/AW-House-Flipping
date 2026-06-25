@@ -100,29 +100,46 @@ export default function Hero() {
     return () => clearTimeout(t)
   }, [imgLoaded])
 
-  // DESKTOP — cursor-following spotlight (only after the video is mounted, so the page opens
-  // on the clean renovated photo and never cuts a hole into a not-yet-loaded old house)
+  // DESKTOP — cursor-following spotlight. No hole until the mouse actually MOVES over the page
+  // (so the site never opens on a stray black circle with no cursor under it), and the hole is
+  // cleared whenever the cursor leaves the window.
   useEffect(() => {
     if (isMobile || !videoOn) return
-    smooth.current = { x: window.innerWidth / 2, y: window.innerHeight * 0.5 }
-    mouse.current = { ...smooth.current }
-    const onMove = (e: PointerEvent) => { mouse.current = { x: e.clientX, y: e.clientY }; setHideHint(true) }
-    window.addEventListener('pointermove', onMove, { passive: true })
+    const el = maskRef.current
+    if (!el) return
     const apply = (x: number, y: number) => {
-      const el = maskRef.current
-      if (!el) return
       el.style.webkitMaskImage = holeGradient(x, y, DESKTOP_R)
       el.style.maskImage = holeGradient(x, y, DESKTOP_R)
     }
-    apply(smooth.current.x, smooth.current.y)
+    const clear = () => { el.style.webkitMaskImage = 'none'; el.style.maskImage = 'none' }
+    clear() // start clean: full renovated house, no spotlight until the user moves the cursor
+    let tracking = false
     const tick = () => {
       smooth.current.x += (mouse.current.x - smooth.current.x) * 0.14
       smooth.current.y += (mouse.current.y - smooth.current.y) * 0.14
       apply(smooth.current.x, smooth.current.y)
       raf.current = requestAnimationFrame(tick)
     }
-    raf.current = requestAnimationFrame(tick)
-    return () => { window.removeEventListener('pointermove', onMove); cancelAnimationFrame(raf.current) }
+    const onMove = (e: PointerEvent) => {
+      setHideHint(true)
+      mouse.current = { x: e.clientX, y: e.clientY }
+      if (!tracking) {
+        tracking = true
+        smooth.current = { x: e.clientX, y: e.clientY }
+        apply(e.clientX, e.clientY)
+        raf.current = requestAnimationFrame(tick)
+      }
+    }
+    const stop = () => { tracking = false; cancelAnimationFrame(raf.current); clear() }
+    window.addEventListener('pointermove', onMove, { passive: true })
+    document.addEventListener('mouseleave', stop) // cursor leaves the viewport
+    window.addEventListener('blur', stop)
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      document.removeEventListener('mouseleave', stop)
+      window.removeEventListener('blur', stop)
+      cancelAnimationFrame(raf.current)
+    }
   }, [isMobile, videoOn])
 
   // MOBILE — reveal only under the finger (off by default) + pin to the tapped hotspot
