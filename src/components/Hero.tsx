@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Hand } from 'lucide-react'
+import { Hand, ChevronDown } from 'lucide-react'
 import { HOTSPOTS } from '../data/hotspots'
 import type { Hotspot } from '../data/hotspots'
 import InfoPanel from './InfoPanel'
@@ -174,6 +174,9 @@ export default function Hero() {
 
   const toggle = (id: string) => setActive((a) => (a === id ? null : id))
 
+  // mobile: the swipe-pan strip eats vertical swipes, so give a tap target to move past the hero
+  const goDown = () => document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
   const dot = (h: Hotspot, left: number, top: number) => {
     const isOn = active === h.id
     return (
@@ -293,6 +296,16 @@ export default function Hero() {
             Touch &amp; swipe · tap a point
           </span>
         </div>
+
+        {/* mobile only: the swipe strip blocks vertical drag, so offer a tap target to scroll on */}
+        <button
+          onClick={goDown}
+          aria-label="Scroll down to learn more"
+          className="sm:hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-[46] pointer-events-auto flex items-center gap-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/20 px-4 py-2 text-white text-[13px] shadow-lg active:scale-95 transition-transform"
+        >
+          Read more
+          <ChevronDown size={16} className="text-brand scroll-cue" />
+        </button>
       </div>
 
       {/* info panel (liquid-glass: right panel on desktop, bottom sheet on mobile) —

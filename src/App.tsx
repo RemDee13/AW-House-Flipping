@@ -66,7 +66,7 @@ export default function App() {
       <Hero />
 
       {/* dark curtain — these sections slide up over the pinned hero */}
-      <div className="relative z-20 bg-black">
+      <div id="explore" className="relative z-20 bg-black">
         <Stats />
         <Story />
         <Process />
