@@ -47,6 +47,8 @@ html, body, #root { margin: 0; height: 100%; background: #000; color: #fff; }
 /* ---- mobile interaction hint pulse ---- */
 @keyframes hintPulse { 0%, 100% { opacity: 0.55; transform: translate(-50%, 0); } 50% { opacity: 1; transform: translate(-50%, -5px); } }
 .hint-pulse { animation: hintPulse 1.8s ease-in-out infinite; }
+@keyframes hintPulseCenter { 0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(0.98); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.03); } }
+.hint-pulse-center { animation: hintPulseCenter 1.8s ease-in-out infinite; }
 
 /* hide the horizontal scrollbar on the mobile pan strip */
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -62,5 +64,6 @@ html, body, #root { margin: 0; height: 100%; background: #000; color: #fff; }
   .hotspot-dot::after { animation: none; opacity: 0.5; }
   .panel-in { animation: none; }
   .hint-pulse { animation: none; transform: translateX(-50%); }
+  .hint-pulse-center { animation: none; transform: translate(-50%, -50%); }
   .reveal-up { opacity: 1; transform: none; transition: none; }
 }

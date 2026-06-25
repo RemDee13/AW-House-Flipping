@@ -12,11 +12,11 @@ export default function InfoPanel({ hotspot, onClose }: { hotspot: Hotspot; onCl
       className="panel-in fixed z-[90] inset-x-0 bottom-0 max-h-[78vh] rounded-t-3xl
                  sm:inset-x-auto sm:left-auto sm:right-5 sm:top-20 sm:bottom-auto sm:w-[380px]
                  sm:max-h-[calc(100dvh-6rem)] sm:rounded-2xl
-                 flex flex-col overflow-hidden border border-white/60 bg-white/55 backdrop-blur-2xl
+                 flex flex-col overflow-hidden border border-white/40 bg-white/35 backdrop-blur-2xl backdrop-saturate-150
                  text-slate-900 shadow-[0_10px_60px_rgba(0,0,0,0.5)]"
     >
       {/* liquid-glass top sheen */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/60 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/40 to-transparent" />
       {/* mobile grab handle */}
       <div className="sm:hidden absolute top-2.5 left-1/2 -translate-x-1/2 h-1.5 w-12 rounded-full bg-slate-900/20" />
       {/* big close */}

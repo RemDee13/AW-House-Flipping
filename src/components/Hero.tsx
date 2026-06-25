@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Hand } from 'lucide-react'
 import { HOTSPOTS } from '../data/hotspots'
 import type { Hotspot } from '../data/hotspots'
 import InfoPanel from './InfoPanel'
@@ -9,7 +10,7 @@ const IMG_H = 1536 // natural size of new.jpg / old.mp4 frame (16:9)
 const MOBILE = 768
 
 const DESKTOP_R = 300
-const MOBILE_R = 90 // small spotlight so it lights one area, not the whole house
+const MOBILE_R = 150 // spotlight radius on touch devices
 
 /** Map an image fraction (0..1) to a viewport pixel position under object-cover (desktop). */
 function coverPos(fx: number, fy: number, w: number, h: number) {
@@ -212,13 +213,21 @@ export default function Hero() {
           <a href="#contact" className="pointer-events-auto bg-brand hover:bg-brand-dark text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-brand/30">Start your flip</a>
         </div>
 
-        {/* interaction hint */}
+        {/* interaction hint — desktop: bottom; mobile: center of screen */}
         <div
-          className={`absolute bottom-6 left-1/2 z-[45] flex items-center gap-2 text-white/80 text-xs sm:text-sm pointer-events-none transition-opacity duration-500 ${hideHint ? 'opacity-0 -translate-x-1/2' : isMobile ? 'opacity-100 hint-pulse' : 'opacity-100 -translate-x-1/2'}`}
+          className={`hidden sm:flex absolute bottom-6 left-1/2 -translate-x-1/2 z-[45] items-center gap-2 text-white/80 text-sm pointer-events-none transition-opacity duration-500 ${hideHint ? 'opacity-0' : 'opacity-100'}`}
         >
           <span className="inline-block h-[1px] w-6 bg-white/40" />
-          {isMobile ? 'Swipe & touch the house · tap a point' : 'Drag across the house · tap a dot'}
+          Drag across the house · tap a dot
           <span className="inline-block h-[1px] w-6 bg-white/40" />
+        </div>
+        <div
+          className={`sm:hidden absolute top-1/2 left-1/2 z-[45] pointer-events-none transition-opacity duration-500 ${hideHint ? 'opacity-0 -translate-x-1/2 -translate-y-1/2' : 'hint-pulse-center'}`}
+        >
+          <span className="flex items-center gap-2 rounded-full bg-black/45 backdrop-blur-md border border-white/20 px-4 py-2.5 text-white text-sm whitespace-nowrap shadow-lg">
+            <Hand size={16} className="text-brand" />
+            Touch &amp; swipe · tap a point
+          </span>
         </div>
       </div>
 
