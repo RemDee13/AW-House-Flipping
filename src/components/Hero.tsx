@@ -277,14 +277,6 @@ export default function Hero() {
           </p>
         </div>
 
-        {/* bottom-right microcopy + CTA */}
-        <div className="hero-anim hero-fade absolute bottom-12 sm:bottom-20 left-5 right-5 sm:left-auto sm:right-10 md:right-14 max-w-full sm:max-w-[270px] z-[45] flex flex-col items-start gap-4 pointer-events-none" style={{ animationDelay: '0.85s' }}>
-          <p className="text-xs sm:text-sm text-white/85 leading-relaxed drop-shadow">
-            Full-home flips — roof, windows, plumbing and curb appeal — rebuilt from the studs out.
-          </p>
-          <a href="#contact" className="pointer-events-auto bg-brand hover:bg-brand-dark text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-brand/30">Start your flip</a>
-        </div>
-
         {/* interaction hint — desktop: bottom; mobile: center of screen */}
         <div
           className={`hidden sm:flex absolute bottom-6 left-1/2 -translate-x-1/2 z-[45] items-center gap-2 text-white/80 text-sm pointer-events-none transition-opacity duration-500 ${hideHint ? 'opacity-0' : 'opacity-100'}`}
