@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Mail, Phone, MapPin } from 'lucide-react'
 
 // Web3Forms — paste the access key from web3forms.com to start receiving submissions.
-const ACCESS_KEY = 'YOUR_WEB3FORMS_ACCESS_KEY'
+const ACCESS_KEY = 'b1bdae2d-bc38-41e1-a070-6637a6b0d3a8'
 const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit'
 const FALLBACK_EMAIL = 'hello@ashwoodrevival.example'
 const BASE = import.meta.env.BASE_URL
