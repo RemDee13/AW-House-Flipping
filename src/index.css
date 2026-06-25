@@ -36,12 +36,21 @@ html, body, #root { margin: 0; height: 100%; background: #000; color: #fff; }
   100% { transform: scale(2.6); opacity: 0; }
 }
 
-/* ---- info panel entrance ---- */
-@keyframes panelIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+/* ---- info panel entrance: mobile slides up from the bottom, desktop drops from above ---- */
+@keyframes panelIn { from { opacity: 0.4; transform: translateY(100%); } to { opacity: 1; transform: none; } }
 @media (min-width: 640px) {
-  @keyframes panelIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+  @keyframes panelIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
 }
-.panel-in { animation: panelIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.panel-in { animation: panelIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@media (min-width: 640px) { .panel-in { animation-duration: 0.34s; } }
+
+/* ---- mobile interaction hint pulse ---- */
+@keyframes hintPulse { 0%, 100% { opacity: 0.55; transform: translate(-50%, 0); } 50% { opacity: 1; transform: translate(-50%, -5px); } }
+.hint-pulse { animation: hintPulse 1.8s ease-in-out infinite; }
+
+/* hide the horizontal scrollbar on the mobile pan strip */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
 
 /* ---- scroll-in reveal ---- */
 .reveal-up { opacity: 0; transform: translateY(28px); transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); }
@@ -52,5 +61,6 @@ html, body, #root { margin: 0; height: 100%; background: #000; color: #fff; }
   .marquee-track { animation: none; }
   .hotspot-dot::after { animation: none; opacity: 0.5; }
   .panel-in { animation: none; }
+  .hint-pulse { animation: none; transform: translateX(-50%); }
   .reveal-up { opacity: 1; transform: none; transition: none; }
 }

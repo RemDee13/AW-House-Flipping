@@ -1,30 +1,44 @@
 import { useEffect, useRef, useState } from 'react'
 import { HOTSPOTS } from '../data/hotspots'
+import type { Hotspot } from '../data/hotspots'
 import InfoPanel from './InfoPanel'
 
 const BASE = import.meta.env.BASE_URL
 const IMG_W = 2752
 const IMG_H = 1536 // natural size of new.jpg / old.mp4 frame (16:9)
-const MOBILE = 768 // <768px: show the whole house (object-contain) so every hotspot is reachable
+const MOBILE = 768
 
-/** Map an image fraction (0..1) to a viewport pixel position for the active object-fit. */
-function fitPos(fx: number, fy: number, w: number, h: number, fit: 'cover' | 'contain') {
-  const scale = fit === 'cover' ? Math.max(w / IMG_W, h / IMG_H) : Math.min(w / IMG_W, h / IMG_H)
+const DESKTOP_R = 300
+const MOBILE_R = 90 // small spotlight so it lights one area, not the whole house
+
+/** Map an image fraction (0..1) to a viewport pixel position under object-cover (desktop). */
+function coverPos(fx: number, fy: number, w: number, h: number) {
+  const scale = Math.max(w / IMG_W, h / IMG_H)
   const dispW = IMG_W * scale
   const dispH = IMG_H * scale
   return { x: (w - dispW) / 2 + fx * dispW, y: (h - dispH) / 2 + fy * dispH }
 }
 
+function holeGradient(x: number, y: number, r: number) {
+  return `radial-gradient(circle ${r}px at ${x}px ${y}px, transparent 0, transparent 42%, rgba(0,0,0,0.6) 65%, #000 85%)`
+}
+
 export default function Hero() {
   const maskRef = useRef<HTMLImageElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const mouse = useRef({ x: 0, y: 0 })
   const smooth = useRef({ x: 0, y: 0 })
   const raf = useRef(0)
-  const [hideHint, setHideHint] = useState(false)
   const [vp, setVp] = useState({ w: 1280, h: 720 })
   const [active, setActive] = useState<string | null>(null)
+  const [hideHint, setHideHint] = useState(false)
 
-  // viewport size (for hotspot positioning)
+  const isMobile = vp.w < MOBILE
+  const stageH = vp.h
+  const stageW = stageH * (IMG_W / IMG_H) // mobile wide stage
+
+  // viewport size
   useEffect(() => {
     const onResize = () => setVp({ w: window.innerWidth, h: window.innerHeight })
     onResize()
@@ -39,76 +53,130 @@ export default function Hero() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  // spotlight reveal
+  // center the mobile pan on mount
   useEffect(() => {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const fine = window.matchMedia('(pointer: fine)').matches
+    if (isMobile && scrollRef.current) scrollRef.current.scrollLeft = (stageW - vp.w) / 2
+  }, [isMobile, stageW, vp.w])
 
-    smooth.current = { x: window.innerWidth / 2, y: window.innerHeight * 0.55 }
+  // DESKTOP — cursor-following spotlight
+  useEffect(() => {
+    if (isMobile) return
+    smooth.current = { x: window.innerWidth / 2, y: window.innerHeight * 0.5 }
     mouse.current = { ...smooth.current }
-
-    const onMove = (e: PointerEvent) => {
-      mouse.current = { x: e.clientX, y: e.clientY }
-      setHideHint(true)
-    }
-    if (fine) window.addEventListener('pointermove', onMove, { passive: true })
-
+    const onMove = (e: PointerEvent) => { mouse.current = { x: e.clientX, y: e.clientY }; setHideHint(true) }
+    window.addEventListener('pointermove', onMove, { passive: true })
     const apply = (x: number, y: number) => {
       const el = maskRef.current
       if (!el) return
-      const R = window.innerWidth < MOBILE ? 150 : 300
-      const g = `radial-gradient(circle ${R}px at ${x}px ${y}px, transparent 0, transparent 40%, rgba(0,0,0,0.55) 62%, #000 82%)`
-      el.style.webkitMaskImage = g
-      el.style.maskImage = g
+      el.style.webkitMaskImage = holeGradient(x, y, DESKTOP_R)
+      el.style.maskImage = holeGradient(x, y, DESKTOP_R)
     }
     apply(smooth.current.x, smooth.current.y)
-
-    const t0 = performance.now()
-    const tick = (t: number) => {
-      if (!fine || reduced) {
-        const cx = window.innerWidth / 2
-        const cy = window.innerHeight * 0.55
-        const r = Math.min(window.innerWidth, window.innerHeight) * 0.22
-        const tt = (t - t0) * 0.0004
-        mouse.current = { x: cx + Math.cos(tt) * r, y: cy + Math.sin(tt) * r * 0.7 }
-      }
-      smooth.current.x += (mouse.current.x - smooth.current.x) * 0.12
-      smooth.current.y += (mouse.current.y - smooth.current.y) * 0.12
+    const tick = () => {
+      smooth.current.x += (mouse.current.x - smooth.current.x) * 0.14
+      smooth.current.y += (mouse.current.y - smooth.current.y) * 0.14
       apply(smooth.current.x, smooth.current.y)
       raf.current = requestAnimationFrame(tick)
     }
     raf.current = requestAnimationFrame(tick)
+    return () => { window.removeEventListener('pointermove', onMove); cancelAnimationFrame(raf.current) }
+  }, [isMobile])
 
-    return () => {
-      window.removeEventListener('pointermove', onMove)
-      cancelAnimationFrame(raf.current)
+  // MOBILE — reveal only under the finger (off by default) + pin to the tapped hotspot
+  useEffect(() => {
+    if (!isMobile) return
+    const el = maskRef.current
+    const stage = stageRef.current
+    const setHole = (lx: number, ly: number) => {
+      if (!el) return
+      el.style.webkitMaskImage = holeGradient(lx, ly, MOBILE_R)
+      el.style.maskImage = holeGradient(lx, ly, MOBILE_R)
     }
-  }, [])
+    const clear = () => { if (el) { el.style.webkitMaskImage = 'none'; el.style.maskImage = 'none' } }
+    const pinActive = () => {
+      const h = HOTSPOTS.find((x) => x.id === active)
+      if (h) setHole(h.x * stageW, h.y * stageH); else clear()
+    }
+    pinActive() // default: clear, or pin to the open hotspot
+
+    if (!stage) return
+    let touching = false
+    const at = (e: TouchEvent) => {
+      const t = e.touches[0]
+      const r = stage.getBoundingClientRect()
+      setHole(t.clientX - r.left, t.clientY - r.top)
+    }
+    const onStart = (e: TouchEvent) => { touching = true; setHideHint(true); at(e) }
+    const onMove = (e: TouchEvent) => { if (touching) at(e) }
+    const onEnd = () => { touching = false; pinActive() }
+    stage.addEventListener('touchstart', onStart, { passive: true })
+    stage.addEventListener('touchmove', onMove, { passive: true })
+    stage.addEventListener('touchend', onEnd, { passive: true })
+    stage.addEventListener('touchcancel', onEnd, { passive: true })
+    return () => {
+      stage.removeEventListener('touchstart', onStart)
+      stage.removeEventListener('touchmove', onMove)
+      stage.removeEventListener('touchend', onEnd)
+      stage.removeEventListener('touchcancel', onEnd)
+    }
+  }, [isMobile, active, stageW, stageH])
+
+  const toggle = (id: string) => setActive((a) => (a === id ? null : id))
+
+  const dot = (h: Hotspot, left: number, top: number) => {
+    const isOn = active === h.id
+    return (
+      <button
+        key={h.id}
+        onClick={() => toggle(h.id)}
+        aria-label={`${h.label} — see what we repaired`}
+        aria-pressed={isOn}
+        className="group pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2 grid place-items-center"
+        style={{ left, top, width: 40, height: 40 }}
+      >
+        <span
+          className={`hotspot-dot block rounded-full transition-all duration-200 ${isOn ? 'w-3.5 h-3.5 bg-white' : 'w-2.5 h-2.5 bg-[#f6b73c] group-hover:w-3.5 group-hover:h-3.5'}`}
+          style={{ boxShadow: '0 0 10px 1px rgba(246,183,60,0.7)' }}
+        />
+        <span className="pointer-events-none absolute bottom-[130%] whitespace-nowrap rounded-md border border-white/15 bg-black/85 px-2 py-1 text-[11px] text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+          {h.label}
+        </span>
+      </button>
+    )
+  }
 
   return (
     <section className="sticky top-0 z-0 w-full overflow-hidden bg-black" style={{ height: '100dvh' }}>
-      {/* BOTTOM — OLD house, rainy video */}
-      <video
-        className="absolute inset-0 w-full h-full object-contain md:object-cover z-10"
-        src={`${BASE}old.mp4`}
-        poster={`${BASE}old-poster.jpg`}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-      />
+      {isMobile ? (
+        /* MOBILE — full-height photo, swipe left/right to pan; reveal under finger */
+        <div
+          ref={scrollRef}
+          className="absolute inset-0 z-10 overflow-x-auto overflow-y-hidden scrollbar-hide"
+          style={{ touchAction: 'pan-x' }}
+        >
+          <div ref={stageRef} className="relative h-full" style={{ width: stageW }}>
+            <video className="absolute inset-0 w-full h-full object-cover" src={`${BASE}old.mp4`} poster={`${BASE}old-poster.jpg`} autoPlay muted loop playsInline preload="auto" />
+            <img ref={maskRef} className="absolute inset-0 w-full h-full object-cover select-none" src={`${BASE}new.jpg`} alt="The renovated house" draggable={false} />
+            <div className="absolute inset-0 z-20">
+              {HOTSPOTS.map((h) => dot(h, h.x * stageW, h.y * stageH))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* DESKTOP — full-bleed, cursor spotlight */
+        <>
+          <video className="absolute inset-0 w-full h-full object-cover z-10" src={`${BASE}old.mp4`} poster={`${BASE}old-poster.jpg`} autoPlay muted loop playsInline preload="auto" />
+          <img ref={maskRef} className="absolute inset-0 w-full h-full object-cover z-20 select-none" src={`${BASE}new.jpg`} alt="The renovated house" draggable={false} />
+          <div className="absolute inset-0 z-50 pointer-events-none">
+            {HOTSPOTS.map((h) => {
+              const p = coverPos(h.x, h.y, vp.w, vp.h)
+              return dot(h, p.x, p.y)
+            })}
+          </div>
+        </>
+      )}
 
-      {/* TOP — NEW house, masked with the spotlight hole */}
-      <img
-        ref={maskRef}
-        className="absolute inset-0 w-full h-full object-contain md:object-cover z-20 select-none"
-        src={`${BASE}new.jpg`}
-        alt="The renovated house"
-        draggable={false}
-      />
-
-      {/* scrims: dark top (nav/heading) + dark bottom gradient + edge vignette */}
+      {/* scrims */}
       <div
         className="absolute inset-0 z-30 pointer-events-none"
         style={{
@@ -117,94 +185,44 @@ export default function Hero() {
             'linear-gradient(to top, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.62) 16%, rgba(0,0,0,0.22) 40%, rgba(0,0,0,0) 62%)',
         }}
       />
-      <div
-        className="absolute inset-0 z-30 pointer-events-none"
-        style={{ boxShadow: 'inset 0 0 200px 50px rgba(0,0,0,0.5)' }}
-      />
+      <div className="absolute inset-0 z-30 pointer-events-none" style={{ boxShadow: 'inset 0 0 200px 50px rgba(0,0,0,0.5)' }} />
 
-      {/* HOTSPOTS — small pulsing amber dots over the house (above text so they stay clickable) */}
-      <div className="absolute inset-0 z-50 pointer-events-none">
-        {HOTSPOTS.map((h) => {
-          const p = fitPos(h.x, h.y, vp.w, vp.h, vp.w < MOBILE ? 'contain' : 'cover')
-          const isOn = active === h.id
-          return (
-            <button
-              key={h.id}
-              onClick={() => setActive((a) => (a === h.id ? null : h.id))}
-              aria-label={`${h.label} — see what we repaired`}
-              aria-pressed={isOn}
-              className="group pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2 grid place-items-center"
-              style={{ left: p.x, top: p.y, width: 34, height: 34 }}
-            >
-              <span
-                className={`hotspot-dot block rounded-full transition-all duration-200 ${isOn ? 'w-3.5 h-3.5 bg-white' : 'w-2.5 h-2.5 bg-[#f6b73c] group-hover:w-3.5 group-hover:h-3.5'}`}
-                style={{ boxShadow: '0 0 10px 1px rgba(246,183,60,0.7)' }}
-              />
-              <span className="pointer-events-none absolute bottom-[130%] whitespace-nowrap rounded-md border border-white/15 bg-black/85 px-2 py-1 text-[11px] text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-                {h.label}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-
-      {/* hero text overlays — fade to an "inspect mode" while a hotspot panel is open */}
+      {/* hero text overlays — fade to "inspect mode" while a hotspot panel is open */}
       <div className={`transition-opacity duration-300 ${active ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-      {/* heading */}
-      <div className="absolute top-[12%] left-0 right-0 z-[45] flex flex-col items-center text-center px-5 pointer-events-none">
-        <h1 className="text-white leading-[0.95] drop-shadow-[0_2px_24px_rgba(0,0,0,0.65)]">
-          <span
-            className="hero-anim hero-reveal block font-playfair italic font-normal text-5xl sm:text-7xl md:text-8xl"
-            style={{ letterSpacing: '-0.04em', animationDelay: '0.25s' }}
-          >
-            We rebuild
-          </span>
-          <span
-            className="hero-anim hero-reveal block font-normal text-5xl sm:text-7xl md:text-8xl -mt-1"
-            style={{ letterSpacing: '-0.06em', animationDelay: '0.42s' }}
-          >
-            what time forgot
-          </span>
-        </h1>
-      </div>
+        {/* heading */}
+        <div className="absolute top-[12%] left-0 right-0 z-[45] flex flex-col items-center text-center px-5 pointer-events-none">
+          <h1 className="text-white leading-[0.95] drop-shadow-[0_2px_24px_rgba(0,0,0,0.65)]">
+            <span className="hero-anim hero-reveal block font-playfair italic font-normal text-5xl sm:text-7xl md:text-8xl" style={{ letterSpacing: '-0.04em', animationDelay: '0.25s' }}>We rebuild</span>
+            <span className="hero-anim hero-reveal block font-normal text-5xl sm:text-7xl md:text-8xl -mt-1" style={{ letterSpacing: '-0.06em', animationDelay: '0.42s' }}>what time forgot</span>
+          </h1>
+        </div>
 
-      {/* bottom-left microcopy */}
-      <div
-        className="hero-anim hero-fade hidden sm:block absolute bottom-16 left-8 md:left-14 max-w-[260px] z-[45] pointer-events-none"
-        style={{ animationDelay: '0.7s' }}
-      >
-        <p className="text-sm text-white/85 leading-relaxed drop-shadow">
-          Every house has a past. Drag across this one to see the storm-wrecked ruin we started with — then tap a dot.
-        </p>
-      </div>
+        {/* bottom-left microcopy (desktop) */}
+        <div className="hero-anim hero-fade hidden sm:block absolute bottom-16 left-8 md:left-14 max-w-[260px] z-[45] pointer-events-none" style={{ animationDelay: '0.7s' }}>
+          <p className="text-sm text-white/85 leading-relaxed drop-shadow">
+            Every house has a past. Drag across this one to see the storm-wrecked ruin we started with — then tap a dot.
+          </p>
+        </div>
 
-      {/* bottom-right microcopy + CTA */}
-      <div
-        className="hero-anim hero-fade absolute bottom-12 sm:bottom-20 left-5 right-5 sm:left-auto sm:right-10 md:right-14 max-w-full sm:max-w-[270px] z-[45] flex flex-col items-start gap-4 pointer-events-none"
-        style={{ animationDelay: '0.85s' }}
-      >
-        <p className="text-xs sm:text-sm text-white/85 leading-relaxed drop-shadow">
-          Full-home flips — roof, windows, plumbing and curb appeal — rebuilt from the studs out.
-        </p>
-        <a
-          href="#contact"
-          className="pointer-events-auto bg-brand hover:bg-brand-dark text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-brand/30"
+        {/* bottom-right microcopy + CTA */}
+        <div className="hero-anim hero-fade absolute bottom-12 sm:bottom-20 left-5 right-5 sm:left-auto sm:right-10 md:right-14 max-w-full sm:max-w-[270px] z-[45] flex flex-col items-start gap-4 pointer-events-none" style={{ animationDelay: '0.85s' }}>
+          <p className="text-xs sm:text-sm text-white/85 leading-relaxed drop-shadow">
+            Full-home flips — roof, windows, plumbing and curb appeal — rebuilt from the studs out.
+          </p>
+          <a href="#contact" className="pointer-events-auto bg-brand hover:bg-brand-dark text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-brand/30">Start your flip</a>
+        </div>
+
+        {/* interaction hint */}
+        <div
+          className={`absolute bottom-6 left-1/2 z-[45] flex items-center gap-2 text-white/80 text-xs sm:text-sm pointer-events-none transition-opacity duration-500 ${hideHint ? 'opacity-0 -translate-x-1/2' : isMobile ? 'opacity-100 hint-pulse' : 'opacity-100 -translate-x-1/2'}`}
         >
-          Start your flip
-        </a>
+          <span className="inline-block h-[1px] w-6 bg-white/40" />
+          {isMobile ? 'Swipe & touch the house · tap a point' : 'Drag across the house · tap a dot'}
+          <span className="inline-block h-[1px] w-6 bg-white/40" />
+        </div>
       </div>
 
-      {/* drag hint */}
-      <div
-        className={`absolute bottom-5 left-1/2 -translate-x-1/2 z-[45] flex items-center gap-2 text-white/70 text-xs sm:text-sm pointer-events-none transition-opacity duration-500 ${hideHint ? 'opacity-0' : 'opacity-100'}`}
-      >
-        <span className="inline-block h-[1px] w-6 bg-white/40" />
-        Drag across the house · tap a dot
-        <span className="inline-block h-[1px] w-6 bg-white/40" />
-      </div>
-      </div>
-
-      {/* info panel (right glass / mobile bottom-sheet) */}
+      {/* info panel (liquid-glass: right panel on desktop, bottom sheet on mobile) */}
       {active && <InfoPanel hotspot={HOTSPOTS.find((h) => h.id === active)!} onClose={() => setActive(null)} />}
     </section>
   )
