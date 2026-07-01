@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Hand, ChevronDown } from 'lucide-react'
+import { Hand, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { HOTSPOTS } from '../data/hotspots'
 import type { Hotspot } from '../data/hotspots'
 import InfoPanel from './InfoPanel'
@@ -294,6 +294,18 @@ export default function Hero() {
           <span className="flex items-center gap-2 rounded-full bg-black/45 backdrop-blur-md border border-white/20 px-4 py-2.5 text-white text-sm whitespace-nowrap shadow-lg">
             <Hand size={16} className="text-brand" />
             Touch &amp; swipe · tap a point
+          </span>
+        </div>
+
+        {/* mobile only: side arrows hint that the hero can be swiped left/right */}
+        <div className={`sm:hidden absolute top-1/2 -translate-y-1/2 left-2 z-[46] pointer-events-none transition-opacity duration-500 ${hideHint ? 'opacity-0' : 'opacity-80'}`}>
+          <span className="grid place-items-center w-8 h-8 rounded-full bg-black/35 backdrop-blur-sm border border-white/15 text-white edge-cue-l">
+            <ChevronLeft size={18} />
+          </span>
+        </div>
+        <div className={`sm:hidden absolute top-1/2 -translate-y-1/2 right-2 z-[46] pointer-events-none transition-opacity duration-500 ${hideHint ? 'opacity-0' : 'opacity-80'}`}>
+          <span className="grid place-items-center w-8 h-8 rounded-full bg-black/35 backdrop-blur-sm border border-white/15 text-white edge-cue-r">
+            <ChevronRight size={18} />
           </span>
         </div>
 

@@ -54,6 +54,12 @@ html, body, #root { margin: 0; height: 100%; background: #000; color: #fff; }
 @keyframes scrollCue { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
 .scroll-cue { animation: scrollCue 1.6s ease-in-out infinite; }
 
+/* ---- mobile side "swipe left/right" arrow nudge ---- */
+@keyframes edgeCueL { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-4px); } }
+@keyframes edgeCueR { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+.edge-cue-l { animation: edgeCueL 1.5s ease-in-out infinite; }
+.edge-cue-r { animation: edgeCueR 1.5s ease-in-out infinite; }
+
 /* hide the horizontal scrollbar on the mobile pan strip */
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -70,5 +76,6 @@ html, body, #root { margin: 0; height: 100%; background: #000; color: #fff; }
   .hint-pulse { animation: none; transform: translateX(-50%); }
   .hint-pulse-center { animation: none; transform: translate(-50%, -50%); }
   .scroll-cue { animation: none; }
+  .edge-cue-l, .edge-cue-r { animation: none; }
   .reveal-up { opacity: 1; transform: none; transition: none; }
 }
